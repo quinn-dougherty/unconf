@@ -9,7 +9,7 @@ const defaultUrl = process.env.VERCEL_URL
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
   title: "UNCONF FOR NO REASON",
-  description: "An unconference. April 25, 2026. Pure anarchy.",
+  description: "April 25 2026 at Monstalvat",
 };
 
 export default function RootLayout({
