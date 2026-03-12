@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useIdentity } from "@/components/identity-gate";
 import { runWithSupabase } from "@/lib/effect/SupabaseClient";
-import { voteBounty } from "@/lib/effect/BountyService";
+import { voteBounty, deleteBounty } from "@/lib/effect/BountyService";
+import { ADMIN_NAME } from "@/lib/constants";
 import { useConfetti } from "@/lib/hooks/use-confetti";
 import type { BountyWithVotes } from "@/lib/hooks/use-bounties";
 
@@ -16,6 +17,7 @@ export function BountyCard({
 }) {
   const identity = useIdentity();
   const fireConfetti = useConfetti();
+  const isAdmin = identity.name === ADMIN_NAME;
   const [voting, setVoting] = useState(false);
   const voteCount = bounty.bounty_votes?.[0]?.count ?? 0;
 
@@ -43,11 +45,28 @@ export function BountyCard({
             <span className="text-muted-foreground"> to talk about </span>
             <span className="font-bold text-foreground">{bounty.topic}</span>
           </p>
-          {bounty.nominator_name && (
-            <p className="text-[10px] text-muted-foreground mt-1">
-              nominated by {bounty.nominator_name}
-            </p>
-          )}
+          <div className="flex items-center gap-2 mt-1">
+            {bounty.nominator_name && (
+              <span className="text-[10px] text-muted-foreground">
+                nominated by {bounty.nominator_name}
+              </span>
+            )}
+            {isAdmin && (
+              <button
+                onClick={async () => {
+                  try {
+                    await runWithSupabase(deleteBounty(bounty.id));
+                    onVoted();
+                  } catch (e) {
+                    console.error("Failed to delete bounty:", e);
+                  }
+                }}
+                className="text-[10px] text-destructive font-bold hover:underline"
+              >
+                DEL
+              </button>
+            )}
+          </div>
         </div>
         <button
           onClick={vote}

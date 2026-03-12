@@ -9,6 +9,8 @@ export const REACTION_EMOJIS = ["🔥", "🤮", "💀", "🙏", "👍", "🎉"] 
 
 export const SITE_PASSWORD = process.env.NEXT_PUBLIC_SITE_PASSWORD ?? "anarchy";
 
+export const ADMIN_NAME = "quinn";
+
 export const SLOT_TYPES = {
   lightning: { label: "LIGHTNING", duration: 10, color: "text-yellow-400" },
   standard: { label: "STANDARD", duration: 20, color: "text-primary" },

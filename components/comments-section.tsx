@@ -7,7 +7,9 @@ import {
   createComment,
   getCommentsForSession,
   flagComment,
+  deleteComment,
 } from "@/lib/effect/CommentService";
+import { ADMIN_NAME } from "@/lib/constants";
 import { useRealtime } from "@/lib/hooks/use-realtime";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -16,9 +18,13 @@ import type { Tables } from "@/lib/supabase/database.types";
 function CommentCard({
   comment,
   onFlag,
+  onDelete,
+  isAdmin,
 }: {
   comment: Tables<"comments">;
   onFlag: (id: string) => void;
+  onDelete?: (id: string) => void;
+  isAdmin?: boolean;
 }) {
   if (comment.hidden) {
     return (
@@ -44,6 +50,14 @@ function CommentCard({
               timeZone: "America/New_York",
             })}
           </span>
+          {isAdmin && onDelete && (
+            <button
+              onClick={() => onDelete(comment.id)}
+              className="text-[10px] text-destructive font-bold opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              DEL
+            </button>
+          )}
           <button
             onClick={() => onFlag(comment.id)}
             className="text-[10px] text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
@@ -100,6 +114,8 @@ export function CommentsSection({ sessionId }: { sessionId: string }) {
     }
   };
 
+  const isAdmin = identity.name === ADMIN_NAME;
+
   const handleFlag = async (commentId: string) => {
     try {
       await runWithSupabase(flagComment(commentId, identity.id));
@@ -109,12 +125,21 @@ export function CommentsSection({ sessionId }: { sessionId: string }) {
     }
   };
 
+  const handleDelete = async (commentId: string) => {
+    try {
+      await runWithSupabase(deleteComment(commentId));
+      await load();
+    } catch (e) {
+      console.error("Failed to delete comment:", e);
+    }
+  };
+
   return (
     <div className="space-y-3">
       <h3 className="text-sm font-bold text-foreground">COMMENTS</h3>
       <div className="space-y-2">
         {comments.map((c) => (
-          <CommentCard key={c.id} comment={c} onFlag={handleFlag} />
+          <CommentCard key={c.id} comment={c} onFlag={handleFlag} onDelete={handleDelete} isAdmin={isAdmin} />
         ))}
         {comments.length === 0 && (
           <p className="text-xs text-muted-foreground italic">

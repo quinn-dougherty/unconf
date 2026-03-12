@@ -50,6 +50,15 @@ export const voteBounty = (bountyId: string, identityId: string) =>
     if (error) return yield* new SupabaseError({ message: error.message, cause: error });
   });
 
+export const deleteBounty = (id: string) =>
+  Effect.gen(function* () {
+    const supabase = yield* SupabaseClient;
+    const { error } = yield* Effect.promise(() =>
+      supabase.from("bounties").delete().eq("id", id),
+    );
+    if (error) return yield* new SupabaseError({ message: error.message, cause: error });
+  });
+
 export const getMostWanted = () =>
   Effect.gen(function* () {
     const supabase = yield* SupabaseClient;

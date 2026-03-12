@@ -40,6 +40,15 @@ export const getCommentsForSession = (sessionId: string) =>
     return data;
   });
 
+export const deleteComment = (id: string) =>
+  Effect.gen(function* () {
+    const supabase = yield* SupabaseClient;
+    const { error } = yield* Effect.promise(() =>
+      supabase.from("comments").delete().eq("id", id),
+    );
+    if (error) return yield* new SupabaseError({ message: error.message, cause: error });
+  });
+
 export const flagComment = (commentId: string, identityId: string) =>
   Effect.gen(function* () {
     const supabase = yield* SupabaseClient;

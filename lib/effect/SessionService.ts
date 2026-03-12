@@ -86,6 +86,15 @@ export const updateSession = (
     return data;
   });
 
+export const deleteSession = (id: string) =>
+  Effect.gen(function* () {
+    const supabase = yield* SupabaseClient;
+    const { error } = yield* Effect.promise(() =>
+      supabase.from("sessions").delete().eq("id", id),
+    );
+    if (error) return yield* new SupabaseError({ message: error.message, cause: error });
+  });
+
 export const getEditHistory = (sessionId: string) =>
   Effect.gen(function* () {
     const supabase = yield* SupabaseClient;

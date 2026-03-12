@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, use } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { NavBar } from "@/components/nav-bar";
 import { ReactionsBar } from "@/components/reactions-bar";
 import { CommentsSection } from "@/components/comments-section";
@@ -12,9 +13,9 @@ import { PasswordGate } from "@/components/password-gate";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { runWithSupabase } from "@/lib/effect/SupabaseClient";
-import { getSessionById } from "@/lib/effect/SessionService";
+import { getSessionById, deleteSession } from "@/lib/effect/SessionService";
 import { useRealtime } from "@/lib/hooks/use-realtime";
-import { SLOT_TYPES } from "@/lib/constants";
+import { SLOT_TYPES, ADMIN_NAME } from "@/lib/constants";
 import type { SessionWithSlot } from "@/lib/hooks/use-sessions";
 
 function getCookie(name: string): string | null {
@@ -33,6 +34,8 @@ function formatTime(iso: string) {
 
 function SessionDetail({ id }: { id: string }) {
   const identity = useIdentity();
+  const router = useRouter();
+  const isAdmin = identity.name === ADMIN_NAME;
   const [session, setSession] = useState<SessionWithSlot | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -91,6 +94,22 @@ function SessionDetail({ id }: { id: string }) {
   const slot = session.time_slots;
   const slotConfig = SLOT_TYPES[slot.slot_type];
   const isCreator = session.created_by === identity.id;
+  const voluntold =
+    session.creator_name &&
+    session.speaker_names.length > 0 &&
+    session.speaker_names.some(
+      (s) => s.toLowerCase() !== session.creator_name!.toLowerCase(),
+    );
+
+  const handleDelete = async () => {
+    if (!confirm("DELETE THIS SESSION? This cannot be undone.")) return;
+    try {
+      await runWithSupabase(deleteSession(session.id));
+      router.push("/");
+    } catch (e) {
+      console.error("Failed to delete session:", e);
+    }
+  };
 
   return (
     <div className={`max-w-3xl mx-auto px-4 pb-12 ${hijackFlash ? "animate-shake" : ""}`}>
@@ -116,6 +135,11 @@ function SessionDetail({ id }: { id: string }) {
               {formatTime(slot.start_time)}&ndash;{formatTime(slot.end_time)}
             </span>
           </div>
+          {voluntold && (
+            <span className="text-xs font-bold text-accent border border-accent border-dashed px-2 py-0.5 mb-2 inline-block">
+              VOLUNTOLD
+            </span>
+          )}
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-2">
             {session.title}
           </h1>
@@ -178,6 +202,15 @@ function SessionDetail({ id }: { id: string }) {
           >
             {isCreator ? "EDIT" : "HIJACK"}
           </Button>
+          {isAdmin && (
+            <Button
+              onClick={handleDelete}
+              variant="outline"
+              className="border-2 border-destructive text-destructive font-bold text-xs hover:bg-destructive/10"
+            >
+              DELETE
+            </Button>
+          )}
           <span className="text-[10px] text-muted-foreground">
             anyone can edit. this is anarchy.
           </span>

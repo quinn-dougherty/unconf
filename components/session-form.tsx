@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { useIdentity } from "@/components/identity-gate";
 import { runWithSupabase } from "@/lib/effect/SupabaseClient";
 import { createSession, updateSession } from "@/lib/effect/SessionService";
+import { createBounty } from "@/lib/effect/BountyService";
 import type { SessionWithSlot } from "@/lib/hooks/use-sessions";
 
 interface SessionFormProps {
@@ -87,9 +88,25 @@ export function SessionForm({
             slides_url: slidesUrl.trim() || null,
             notes_url: notesUrl.trim() || null,
             created_by: identity.id,
+            creator_name: identity.name,
           }),
         );
       }
+
+      // Auto-create bounties for voluntold speakers
+      const voluntold = speakerNames.filter(
+        (s) => s.toLowerCase() !== identity.name.toLowerCase(),
+      );
+      for (const target of voluntold) {
+        try {
+          await runWithSupabase(
+            createBounty(target, title.trim(), identity.id, identity.name),
+          );
+        } catch {
+          // Best-effort, don't block on bounty creation
+        }
+      }
+
       onOpenChange(false);
       onSuccess?.();
     } catch (e) {

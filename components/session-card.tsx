@@ -22,27 +22,42 @@ function isPast(slot: Tables<"time_slots">) {
   return new Date(slot.end_time) <= new Date();
 }
 
+function isVoluntold(session: SessionWithSlot): boolean {
+  if (!session.creator_name || session.speaker_names.length === 0) return false;
+  return session.speaker_names.some(
+    (s) => s.toLowerCase() !== session.creator_name!.toLowerCase(),
+  );
+}
+
 export function SessionCard({ session }: { session: SessionWithSlot }) {
   const slot = session.time_slots;
   const slotConfig = SLOT_TYPES[slot.slot_type];
   const now = isNow(slot);
   const past = isPast(slot);
+  const voluntold = isVoluntold(session);
 
   return (
     <Link href={`/session/${session.id}`}>
       <div
         className={`border-2 p-3 transition-all hover:border-primary/70 ${
-          now
-            ? "border-primary animate-pulse-glow"
-            : past
-              ? "border-border/50 opacity-50"
-              : "border-border hover:bg-card"
+          voluntold
+            ? "border-dashed border-accent/70 hover:border-accent"
+            : now
+              ? "border-primary animate-pulse-glow"
+              : past
+                ? "border-border/50 opacity-50"
+                : "border-border hover:bg-card"
         }`}
       >
         <div className="flex items-center gap-2 mb-1">
           {now && (
             <span className="text-xs font-bold text-primary border border-primary px-1 animate-blink">
               NOW
+            </span>
+          )}
+          {voluntold && (
+            <span className="text-[10px] font-bold text-accent border border-accent px-1">
+              VOLUNTOLD
             </span>
           )}
           <span className={`text-xs font-bold ${slotConfig.color}`}>
