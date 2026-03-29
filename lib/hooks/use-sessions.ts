@@ -5,6 +5,8 @@ import { runWithSupabase } from "@/lib/effect/SupabaseClient";
 import { getAllSessions } from "@/lib/effect/SessionService";
 import { getAllTimeSlots } from "@/lib/effect/TimeSlotService";
 import { useRealtime } from "./use-realtime";
+import { isSupabaseDown } from "@/lib/supabase/health";
+import { useSupabaseStatus } from "@/components/supabase-status";
 import type { Tables } from "@/lib/supabase/database.types";
 
 export type SessionWithSlot = Tables<"sessions"> & {
@@ -15,6 +17,7 @@ export function useSessions() {
   const [sessions, setSessions] = useState<SessionWithSlot[]>([]);
   const [timeSlots, setTimeSlots] = useState<Tables<"time_slots">[]>([]);
   const [loading, setLoading] = useState(true);
+  const { markDown } = useSupabaseStatus();
 
   const refresh = useCallback(async () => {
     try {
@@ -26,10 +29,11 @@ export function useSessions() {
       setTimeSlots(slotsData);
     } catch (e) {
       console.error("Failed to load sessions:", e);
+      if (isSupabaseDown(e)) markDown();
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [markDown]);
 
   useEffect(() => {
     refresh();

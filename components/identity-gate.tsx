@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { runWithSupabase } from "@/lib/effect/SupabaseClient";
 import { getOrCreateIdentity } from "@/lib/effect/IdentityService";
+import { isSupabaseDown } from "@/lib/supabase/health";
 
 interface Identity {
   id: string;
@@ -36,6 +37,7 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [dbDown, setDbDown] = useState(false);
 
   useEffect(() => {
     const stored = getCookie("unconf_identity");
@@ -59,6 +61,9 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
       setIdentity(ident);
     } catch (e) {
       console.error("Failed to create identity:", e);
+      if (isSupabaseDown(e)) {
+        setDbDown(true);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -94,6 +99,24 @@ export function IdentityProvider({ children }: { children: ReactNode }) {
               {submitting ? "..." : "GO"}
             </Button>
           </div>
+          {dbDown && (
+            <div className="mt-4 border-2 border-destructive p-3 text-sm">
+              <p className="font-bold text-destructive">DATABASE OFFLINE</p>
+              <p className="text-muted-foreground mt-1">
+                The database has been paused due to inactivity. Bug quinn to
+                restore it on the{" "}
+                <a
+                  href="https://supabase.com/dashboard"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline text-destructive"
+                >
+                  Supabase dashboard
+                </a>
+                .
+              </p>
+            </div>
+          )}
         </div>
       </div>
     );

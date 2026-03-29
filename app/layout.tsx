@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { SupabaseStatusProvider } from "@/components/supabase-status";
 import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL
@@ -20,7 +21,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className="font-mono antialiased">
-        <TooltipProvider>{children}</TooltipProvider>
+        <SupabaseStatusProvider>
+          <TooltipProvider>{children}</TooltipProvider>
+        </SupabaseStatusProvider>
       </body>
     </html>
   );
