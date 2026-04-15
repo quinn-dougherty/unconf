@@ -9,10 +9,41 @@ import type { Tables } from "@/lib/supabase/database.types";
 
 type SlotType = "lightning" | "standard" | "micro";
 
-const SECTIONS: { type: SlotType; label: string; timeLabel: string }[] = [
-  { type: "lightning", label: "LIGHTNING ROUNDS", timeLabel: "1:30 - 2:30 PM" },
-  { type: "standard", label: "STANDARD TALKS", timeLabel: "2:30 - 4:00 PM" },
-  { type: "micro", label: "MICRO TALKS", timeLabel: "4:00 - 5:00 PM" },
+type SectionKey = "micro-early" | "lightning" | "standard" | "micro-late";
+
+const SECTIONS: {
+  key: SectionKey;
+  type: SlotType;
+  label: string;
+  timeLabel: string;
+  filter?: (slotIndex: number) => boolean;
+}[] = [
+  {
+    key: "micro-early",
+    type: "micro",
+    label: "MICRO TALKS (OPENING)",
+    timeLabel: "1:30 - 1:50 PM",
+    filter: (i) => i <= 4,
+  },
+  {
+    key: "lightning",
+    type: "lightning",
+    label: "LIGHTNING ROUNDS",
+    timeLabel: "2:00 - 2:50 PM",
+  },
+  {
+    key: "standard",
+    type: "standard",
+    label: "STANDARD TALKS",
+    timeLabel: "3:00 - 4:35 PM",
+  },
+  {
+    key: "micro-late",
+    type: "micro",
+    label: "MICRO TALKS (CLOSING)",
+    timeLabel: "4:40 - 5:00 PM",
+    filter: (i) => i >= 5,
+  },
 ];
 
 export function ScheduleView() {
@@ -43,10 +74,11 @@ export function ScheduleView() {
     <>
       <div className="space-y-8">
         {SECTIONS.map((section) => {
-          const slots = slotsByType.get(section.type) ?? [];
+          const all = slotsByType.get(section.type) ?? [];
+          const slots = section.filter ? all.filter((s) => section.filter!(s.slot_index)) : all;
           const config = SLOT_TYPES[section.type];
           return (
-            <div key={section.type}>
+            <div key={section.key}>
               <div className="flex items-center gap-3 mb-3">
                 <h2 className={`text-lg font-bold ${config.color}`}>
                   {section.label}
