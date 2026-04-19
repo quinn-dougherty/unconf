@@ -9,7 +9,7 @@ import type { Tables } from "@/lib/supabase/database.types";
 
 type SlotType = "lightning" | "standard" | "micro";
 
-type SectionKey = "micro-early" | "lightning" | "standard" | "micro-late";
+type SectionKey = "opener" | "micro-early" | "lightning" | "standard" | "micro-late";
 
 const SECTIONS: {
   key: SectionKey;
@@ -19,10 +19,17 @@ const SECTIONS: {
   filter?: (slotIndex: number) => boolean;
 }[] = [
   {
+    key: "opener",
+    type: "standard",
+    label: "OPENING TALK",
+    timeLabel: "1:15 - 1:35 PM",
+    filter: (i) => i === 4,
+  },
+  {
     key: "micro-early",
     type: "micro",
     label: "MICRO TALKS (OPENING)",
-    timeLabel: "1:30 - 1:50 PM",
+    timeLabel: "1:40 - 2:00 PM",
     filter: (i) => i <= 4,
   },
   {
@@ -35,7 +42,8 @@ const SECTIONS: {
     key: "standard",
     type: "standard",
     label: "STANDARD TALKS",
-    timeLabel: "3:00 - 4:35 PM",
+    timeLabel: "3:00 - 4:10 PM",
+    filter: (i) => i < 4,
   },
   {
     key: "micro-late",
